@@ -129,10 +129,9 @@ function generate_tlsa_digest($hostname, $port, $starttls = null) {
   }
 }
 function verify_ssha256($hash, $password) {
-	// Remove tag if any
+  // Check SSHA256
   if (substr($hash, 0, strlen('{SSHA256}')) == '{SSHA256}') {
-    $hash = substr($hash, strlen('{SSHA256}'));
-  }
+    	$hash = substr($hash, strlen('{SSHA256}'));
 	// Decode hash
 	$dhash = base64_decode($hash);
 	// Get first 32 bytes of binary which equals a SHA256 hash
@@ -142,10 +141,26 @@ function verify_ssha256($hash, $password) {
 	// Check single salted SHA256 hash against extracted hash
 	if (hash('sha256', $password . $osalt, true) == $ohash) {
 		return true;
-	}
-	else {
+	}else {
 		return false;
 	}
+  }
+  // Check SSHA512
+  if (substr($hash, 0, strlen('{SSHA512}')) == '{SSHA512}') {
+    	$hash = substr($hash, strlen('{SSHA512}'));
+	// Decode hash
+	$dhash = base64_decode($hash);
+	// Get first 64 bytes of binary which equals a SHA512 hash
+	$ohash = substr($dhash, 0, 64);
+	// Remove SHA512 hash from decoded hash to get original salt string
+	$osalt = str_replace($ohash, '', $dhash);
+	// Check single salted SHA512 hash against extracted hash
+	if (hash('sha512', $password . $osalt, true) == $ohash) {
+		return true;
+	}else {
+		return false;
+	}
+  }
 }
 function check_login($user, $pass) {
 	global $pdo;
